@@ -11,11 +11,11 @@ re-run the listed command after any change and expect the stated result.
 |---|------|--------|
 | 1 | `oltp-svc-core` names no storage technology and has no external dependency beyond `oltp-pattern` | `grep -nE "^\s*(pub )?(struct\|enum\|fn) \w*(Postgres\|MySql\|Sqlite\|Redis\|DynamoDb)" main/oltp/core/src/*.rs` returns nothing; `main/oltp/core/Cargo.toml`'s `[dependencies]` lists only `oltp-pattern` |
 
-## 2. `TransactionalStoreFactory` returns `Box<dyn TransactionalStore>` uniformly
+## 2. `TransactionalStoreFactory` returns zero-cost `impl TransactionalStore`, not `Box<dyn TransactionalStore>`
 
 | # | Rule | Verify |
 |---|------|--------|
-| 2 | `TransactionalStoreFactory::in_memory` returns `Box<dyn TransactionalStore>` | `grep -n "Box<dyn TransactionalStore>" main/oltp/saf/src/*.rs` shows the constructor's return type |
+| 2 | `TransactionalStoreFactory::in_memory` is generic over `K`/`R` and returns `impl TransactionalStore<Key = K, Record = R>`, no heap allocation or vtable dispatch | `grep -n "Box<dyn TransactionalStore>" main/oltp/saf/src/*.rs` returns nothing; `grep -n "impl TransactionalStore" main/oltp/saf/src/*.rs` shows the constructor's return type |
 | 3 | `saf`'s own `lib.rs` never re-exports a concrete backend type (`InMemoryTransactionalStore`) | `grep -n "^pub use" main/oltp/saf/src/lib.rs` shows only `TransactionalStoreFactory` |
 
 ## 3. Lint gates

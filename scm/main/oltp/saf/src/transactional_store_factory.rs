@@ -6,12 +6,22 @@ use oltp_pattern::TransactionalStore;
 pub struct TransactionalStoreFactory;
 
 impl TransactionalStoreFactory {
-    /// Construct the in-process reference store.
+    /// Construct the in-process reference store, generic over the caller's
+    /// own key/record types (e.g. `TransactionalStoreFactory::in_memory::<String, Order>()`).
+    ///
+    /// Zero-cost: returns `impl TransactionalStore` directly, not
+    /// `Box<dyn TransactionalStore>` -- `TransactionalStore` isn't
+    /// object-safe (it has associated types), so there is no boxed form to
+    /// return even if one were wanted.
     ///
     /// Records are lost if the process exits -- no persistence, no
     /// distributed coordination. See
     /// [`oltp_svc_core::InMemoryTransactionalStore`]'s own doc comment.
-    pub fn in_memory() -> Box<dyn TransactionalStore> {
-        Box::new(oltp_svc_core::InMemoryTransactionalStore::new())
+    pub fn in_memory<K, R>() -> impl TransactionalStore<Key = K, Record = R>
+    where
+        K: Send + Sync + Clone + Eq + std::hash::Hash + 'static,
+        R: Send + Sync + Clone + 'static,
+    {
+        oltp_svc_core::InMemoryTransactionalStore::<K, R>::new()
     }
 }

@@ -10,12 +10,13 @@ crate's implementation choices are new design, not extraction. Two real
 alternatives were considered for how `InMemoryTransactionalStore` holds and
 guards its records:
 
-1. **A single `std::sync::RwLock<HashMap<RecordKey, Record>>`** (chosen):
-   one lock guards the whole table. Reads take a shared (`read`) lock,
-   writes (including `write_batch`) take an exclusive (`write`) lock for
-   the whole operation.
-2. **Per-key locking** (e.g. a `HashMap<RecordKey, RwLock<Record>>`, or a
-   sharded lock table): finer-grained concurrency, but `write_batch` would
+1. **A single `std::sync::RwLock<HashMap<K, R>>`** (chosen, `K`/`R` being
+   whatever key/record types the caller picks via `TransactionalStore`'s
+   own `Key`/`Record` associated types): one lock guards the whole table.
+   Reads take a shared (`read`) lock, writes (including `write_batch`)
+   take an exclusive (`write`) lock for the whole operation.
+2. **Per-key locking** (e.g. a `HashMap<K, RwLock<R>>`, or a sharded lock
+   table): finer-grained concurrency, but `write_batch` would
    need to acquire multiple per-key locks in a consistent order to stay
    atomic and avoid deadlock against a concurrent `write_batch` touching
    an overlapping key set.
@@ -43,11 +44,14 @@ Chose (1), a single `RwLock` over the whole table, for this first version:
 - `oltp-svc-core` depends on `oltp-pattern` only — no `futures` dependency
   (unlike `scheduler-svc-core`), since every operation here is genuinely
   synchronous work (a `HashMap` lookup/insert/remove under a lock, no
-  actual I/O) wrapped in `StoreFuture` purely to satisfy the trait's async
-  shape, not because this backend performs any real asynchronous work.
+  actual I/O), and `TransactionalStore`'s own methods return `impl Future`
+  (RPITIT, no `futures` crate involved) rather than a boxed future, purely
+  to satisfy the trait's async shape, not because this backend performs
+  any real asynchronous work.
 - `InMemoryTransactionalStore` does not implement `Clone` (unlike
   `message-broker-svc-core`'s `InMemoryMessageBroker`) — `oltp-svc-saf`
   constructs exactly one instance per `TransactionalStoreFactory::in_memory()`
-  call and hands back a `Box<dyn TransactionalStore>`; there is no need for
-  multiple handles sharing one table the way pub/sub subscribers need to
-  share one broker's channel map.
+  call and hands it back directly (as `impl TransactionalStore`, not a
+  boxed trait object — see architecture.md); there is no need for multiple
+  handles sharing one table the way pub/sub subscribers need to share one
+  broker's channel map.

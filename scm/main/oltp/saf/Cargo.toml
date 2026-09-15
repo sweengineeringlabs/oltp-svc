@@ -1,6 +1,6 @@
 [package]
 name         = "oltp-svc-saf"
-version      = "0.1.0"
+version      = "0.2.0"
 edition      = "2021"
 license      = "MIT OR Apache-2.0"
 authors      = ["SWE Engineering Labs"]
@@ -19,8 +19,8 @@ name = "oltp_svc_saf"
 path = "src/lib.rs"
 
 [dependencies]
-oltp-pattern  = { git = "https://github.com/sweengineeringlabs/oltp-pattern.git", tag = "v0.1.0" }
-oltp-svc-core = { path = "../core", version = "0.1.0" }
+oltp-pattern  = { git = "https://github.com/sweengineeringlabs/oltp-pattern.git", tag = "v0.2.0" }
+oltp-svc-core = { path = "../core", version = "0.2.0" }
 
 [dev-dependencies]
 tokio = { version = "1.52", features = ["rt-multi-thread", "macros"] }
