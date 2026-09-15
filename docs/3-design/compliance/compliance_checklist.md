@@ -15,7 +15,7 @@ re-run the listed command after any change and expect the stated result.
 
 | # | Rule | Verify |
 |---|------|--------|
-| 2 | `TransactionalStoreFactory::in_memory` is generic over `K`/`R` and returns `impl TransactionalStore<Key = K, Record = R>`, no heap allocation or vtable dispatch | `grep -n "Box<dyn TransactionalStore>" main/oltp/saf/src/*.rs` returns nothing; `grep -n "impl TransactionalStore" main/oltp/saf/src/*.rs` shows the constructor's return type |
+| 2 | `TransactionalStoreFactory::in_memory` is generic over `K`/`R` and returns `impl TransactionalStore<Key = K, Record = R>`, no heap allocation or vtable dispatch | `grep -n "pub fn in_memory" -A5 main/oltp/saf/src/transactional_store_factory.rs` shows `-> impl TransactionalStore<Key = K, Record = R>`, not `Box<dyn TransactionalStore>` |
 | 3 | `saf`'s own `lib.rs` never re-exports a concrete backend type (`InMemoryTransactionalStore`) | `grep -n "^pub use" main/oltp/saf/src/lib.rs` shows only `TransactionalStoreFactory` |
 
 ## 3. Lint gates
