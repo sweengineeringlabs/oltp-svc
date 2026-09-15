@@ -1,0 +1,34 @@
+[package]
+name         = "oltp-svc-saf"
+version      = "0.1.0"
+edition      = "2021"
+license      = "MIT OR Apache-2.0"
+authors      = ["SWE Engineering Labs"]
+repository   = "https://github.com/sweengineeringlabs/oltp-svc"
+rust-version = "1.98"
+description  = "oltp-svc SAF: construction factory for the in-memory TransactionalStore implementation."
+keywords     = ["oltp", "saf", "async", "swe"]
+categories   = ["asynchronous"]
+
+[package.metadata.arch]
+application_type = "facade"
+service_type     = "oltp"
+
+[lib]
+name = "oltp_svc_saf"
+path = "src/lib.rs"
+
+[dependencies]
+oltp-pattern  = { git = "https://github.com/sweengineeringlabs/oltp-pattern.git", tag = "v0.1.0" }
+oltp-svc-core = { path = "../core", version = "0.1.0" }
+
+[dev-dependencies]
+tokio = { version = "1.52", features = ["rt-multi-thread", "macros"] }
+
+[lints.rust]
+unsafe_code  = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
